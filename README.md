@@ -66,3 +66,6 @@ GET /get_list
 
 Code 201 Массив объектов товар (id, count)
 Code 4xx, 5xx (id ошибки)
+
+
+Паттерн Сага: https://github.com/dimka11/Information_systems_design_management/blob/main/PatternSaga/Program.cs

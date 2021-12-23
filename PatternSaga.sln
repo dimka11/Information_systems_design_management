@@ -3,7 +3,9 @@ Microsoft Visual Studio Solution File, Format Version 12.00
 # Visual Studio Version 17
 VisualStudioVersion = 17.0.31612.314
 MinimumVisualStudioVersion = 10.0.40219.1
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "PatternSaga", "PatternSaga\PatternSaga.csproj", "{309D2454-CD6F-49DC-8FBA-C8B76C5485E2}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "PatternSaga", "PatternSaga\PatternSaga.csproj", "{309D2454-CD6F-49DC-8FBA-C8B76C5485E2}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "2FC_AddProduct", "2FC_AddProduct\2FC_AddProduct.csproj", "{49489356-9227-44B9-ADD2-B598858C6DF1}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -15,6 +17,10 @@ Global
 		{309D2454-CD6F-49DC-8FBA-C8B76C5485E2}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{309D2454-CD6F-49DC-8FBA-C8B76C5485E2}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{309D2454-CD6F-49DC-8FBA-C8B76C5485E2}.Release|Any CPU.Build.0 = Release|Any CPU
+		{49489356-9227-44B9-ADD2-B598858C6DF1}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{49489356-9227-44B9-ADD2-B598858C6DF1}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{49489356-9227-44B9-ADD2-B598858C6DF1}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{49489356-9227-44B9-ADD2-B598858C6DF1}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

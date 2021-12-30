@@ -5,31 +5,18 @@ namespace _2FC_AddProduct
     // Сервис хранения информации о продукте
     class ProductInfoService
     {
+        // добавляем продукта в сервис
         public int Add(Product product) { return 0; }
-        public void Remove(Product product) {}
+        // успешной загрузки изображения добавляем информацию, о том, что оно загружено
+        public int EditProduct(int id, bool imageIsLoaded) { return 0; }
+        // всли изображение не загружено, нужно удалить продукт из сервиса
+        public void Remove(int product_id) {}
     }
     // Сервис хранения изображений
     class ImageStoreService
     {
-        public string Add(byte[] image) { return ""; }
-        public void Remove(byte[] image) {}
-    }
-    // Сервис БД магазина
-    class StoreDataBase
-    {
-        public void Add(StoreItem storeItem) { }
-    }
-    // id продукта и url изображения
-    class StoreItem
-    {
-        public int product_id;
-        public string image_url;
-
-        public StoreItem(int product_id, string image_url)
-        {
-            this.product_id = product_id;
-            this.image_url = image_url;
-        }
+        public void Add(byte[] image, string url) {}
+        public void Remove(string url) {}
     }
     // Добавляемый продукт
     class Product
@@ -38,50 +25,42 @@ namespace _2FC_AddProduct
         public string info;
         public int price;
         public byte[] image;
+        public string image_url;
     }
-    // Добавления продукта в БД
+    // Добавления продукта в сервис
     class AddProductTransaction
     {
         Product _product;
         ProductInfoService _productInfoService;
         ImageStoreService _imageStoreService;
-        StoreDataBase _storeDataBase;
 
-        public StoreItem storeItem;
-        public AddProductTransaction(Product product, ProductInfoService productInfoService, ImageStoreService imageStoreService, StoreDataBase storeDataBase)
+        public AddProductTransaction(Product product, ProductInfoService productInfoService, ImageStoreService imageStoreService)
         {
             _product = product;
             _productInfoService = productInfoService;
             _imageStoreService = imageStoreService;
-            _storeDataBase = storeDataBase;
         }
+
+        private int product_id;
         // Выполняет добавление продукта в разные сервисы
         public void Prepare()
         {
-            try
-            {
-                // Добавляем информацию в БД
-                int product_id = _productInfoService.Add(_product);
-                // Загружаем изображение
-                string image_url = _imageStoreService.Add(_product.image);
-
-                storeItem = new StoreItem(product_id, image_url);
-            }
-            catch (Exception e)
-            {
-                // Предполагается, что _productInfoService и _imageStoreService выбрасывают исключение в случае ошибки или таймаута
-            }
+            // Добавляем информацию в сервис
+            product_id = _productInfoService.Add(_product);
+            // Загружаем изображение
+            _imageStoreService.Add(_product.image, _product.image_url);
         }
+
         public void Commit()
         {
-            // Добавляем продукт в основную БД, в случае если добавилась информация и изображение
-            _storeDataBase.Add(storeItem);
+            // Ставим отметку, что изображение загружено
+            _productInfoService.EditProduct(product_id, true);
         }
         public void RollBack()
         {
-            //Удаляем информацию из БД / загруженное изображение в случае ошибки / таймаута
-            _productInfoService.Remove(_product);
-            _imageStoreService.Remove(_product.image);
+            //Удаляем информацию из сервиса / загруженное изображение в случае ошибки / таймаута
+            _productInfoService.Remove(product_id);
+            _imageStoreService.Remove(_product.image_url);
         }
     }
 
@@ -110,7 +89,6 @@ namespace _2FC_AddProduct
         }
     }
 
-
     class Program
     {
         static void Main(string[] args)
@@ -120,9 +98,10 @@ namespace _2FC_AddProduct
                 title = "Product",
                 info = "description",
                 price = 1000,
-                image = new byte[] { 1 }
+                image = new byte[] { 1 },
+                image_url = Guid.NewGuid().ToString()
             },
-            new ProductInfoService(), new ImageStoreService(), new StoreDataBase()
+            new ProductInfoService(), new ImageStoreService()
             );
 
             var TransactionManager = new TransactionManager(transaction);

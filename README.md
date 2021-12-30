@@ -70,3 +70,6 @@ Code 4xx, 5xx (id ошибки)
 
 
 **Паттерн Сага:** https://github.com/dimka11/Information_systems_design_management/blob/main/PatternSaga/Program.cs
+
+**2FC:** 
+https://github.com/dimka11/Information_systems_design_management/blob/main/2FC_AddProduct/Program.cs

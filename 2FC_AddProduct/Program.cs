@@ -27,7 +27,7 @@ namespace _2FC_AddProduct
         public byte[] image;
         public string image_url;
     }
-
+    // Транзакция добавления информации
     class AddInfoTransaction
     {
         ProductInfoService _productInfoService;
@@ -55,7 +55,7 @@ namespace _2FC_AddProduct
             _productInfoService.Remove(id);
         }
     }
-
+    // Транзакция добавления изображения
     class AddImageTransaction
     {
         ImageStoreService _imageStoreService;
@@ -107,7 +107,7 @@ namespace _2FC_AddProduct
 
         public void Commit()
         {
-            // Ставим отметку, что изображение загружено
+            // Ставим отметку в БД, что изображение загружено
             _addInfoTransaction.Edit(product_id, true);
         }
         public void RollBack()
@@ -117,7 +117,7 @@ namespace _2FC_AddProduct
             _addImageTransaction.Remove(_product.image_url);
         }
     }
-
+    // Журнал для хранения инофрмации о завершении транзакции
     class AddProductTransactionJournal
     {
         public bool AddImageDone;
@@ -152,7 +152,7 @@ namespace _2FC_AddProduct
                 _transaction.RollBack();
                 Start();
             }
-
+            // Проверяем журнал на наличие отметок об успешности транзакций
             if (Journal.AddInfoDone && Journal.AddImageDone)
             {
                 _transaction.Commit();

@@ -27,60 +27,137 @@ namespace _2FC_AddProduct
         public byte[] image;
         public string image_url;
     }
+
+    class AddInfoTransaction
+    {
+        ProductInfoService _productInfoService;
+        public TransactionManager _transactionManager;
+        public AddInfoTransaction(ProductInfoService productInfoService)
+        {
+            _productInfoService = productInfoService;
+        }
+
+        public int Add(Product _product)
+        {
+            int id = _productInfoService.Add(_product);
+            _transactionManager.Journal.AddInfoDone = true;
+            _transactionManager.Prepared();
+            return id;
+        }
+
+        public void Edit(int id, bool v)
+        {
+            _productInfoService.EditProduct(id, v);
+        }
+
+        public void Remove(int id)
+        {
+            _productInfoService.Remove(id);
+        }
+    }
+
+    class AddImageTransaction
+    {
+        ImageStoreService _imageStoreService;
+        public TransactionManager _transactionManager;
+        public AddImageTransaction(ImageStoreService imageStoreService)
+        {
+            _imageStoreService = imageStoreService;
+        }
+
+        public void Add(byte[] image, string url)
+        {
+            _imageStoreService.Add(image, url);
+            _transactionManager.Journal.AddImageDone = true;
+            _transactionManager.Prepared();
+        }
+
+        public void Remove(string url)
+        {
+            _imageStoreService.Remove(url);
+        }
+    }
     // Добавления продукта в сервис
     class AddProductTransaction
     {
         Product _product;
-        ProductInfoService _productInfoService;
-        ImageStoreService _imageStoreService;
-
-        public AddProductTransaction(Product product, ProductInfoService productInfoService, ImageStoreService imageStoreService)
+        private AddInfoTransaction _addInfoTransaction;
+        private AddImageTransaction _addImageTransaction;
+        public AddProductTransaction(Product product, AddInfoTransaction addInfoTransaction, AddImageTransaction addImageTransaction)
         {
             _product = product;
-            _productInfoService = productInfoService;
-            _imageStoreService = imageStoreService;
+            _addInfoTransaction = addInfoTransaction;
+            _addImageTransaction = addImageTransaction;
         }
+
+        public TransactionManager TransactionManager;
 
         private int product_id;
         // Выполняет добавление продукта в разные сервисы
         public void Prepare()
         {
+            _addInfoTransaction._transactionManager = TransactionManager;
+            _addImageTransaction._transactionManager = TransactionManager;
             // Добавляем информацию в сервис
-            product_id = _productInfoService.Add(_product);
+            product_id = _addInfoTransaction.Add(_product);
+
             // Загружаем изображение
-            _imageStoreService.Add(_product.image, _product.image_url);
+            _addImageTransaction.Add(_product.image, _product.image_url);
         }
 
         public void Commit()
         {
             // Ставим отметку, что изображение загружено
-            _productInfoService.EditProduct(product_id, true);
+            _addInfoTransaction.Edit(product_id, true);
         }
         public void RollBack()
         {
             //Удаляем информацию из сервиса / загруженное изображение в случае ошибки / таймаута
-            _productInfoService.Remove(product_id);
-            _imageStoreService.Remove(_product.image_url);
+            _addInfoTransaction.Remove(product_id);
+            _addImageTransaction.Remove(_product.image_url);
         }
+    }
+
+    class AddProductTransactionJournal
+    {
+        public bool AddImageDone;
+        public bool AddInfoDone;
     }
 
     // управляет процессом добавления продуктов
     class TransactionManager
     {
         AddProductTransaction _transaction;
+        public AddProductTransactionJournal Journal;
         public TransactionManager(AddProductTransaction addProductTransaction)
         {
             _transaction = addProductTransaction;
+            _transaction.TransactionManager = this;
+            Journal = new AddProductTransactionJournal();
+        }
+
+        private int prepared_counter = 0;
+
+        public void Prepared()
+        {
+            prepared_counter++;
         }
 
         public void Start()
         {
-            try
+            _transaction.Prepare();
+
+            if (prepared_counter != 2) // Не все транзакции вызвали Prepared;
             {
-                _transaction.Prepare();
+                _transaction.RollBack();
+                Start();
+            }
+
+            if (Journal.AddInfoDone && Journal.AddImageDone)
+            {
                 _transaction.Commit();
             }
-            catch (Exception e)
+            else
             {
                 _transaction.RollBack();
                 // запускаем транзакцию заного / или записываем неудачные транзации для повторения
@@ -100,8 +177,7 @@ namespace _2FC_AddProduct
                 price = 1000,
                 image = new byte[] { 1 },
                 image_url = Guid.NewGuid().ToString()
-            },
-            new ProductInfoService(), new ImageStoreService()
+            }, new AddInfoTransaction(new ProductInfoService()), new AddImageTransaction(new ImageStoreService())
             );
 
             var TransactionManager = new TransactionManager(transaction);
